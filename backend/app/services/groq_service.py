@@ -1,7 +1,7 @@
 import os
 
-from groq import Groq
 from dotenv import load_dotenv
+from groq import Groq
 
 load_dotenv()
 
@@ -11,20 +11,24 @@ client = Groq(
 
 
 def ask_groq(prompt: str) -> str:
-    """
-    Send a prompt to Groq and return the response.
-    """
-
-    completion = client.chat.completions.create(
+    response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {
+                "role": "system",
+                "content": (
+                    "You are a senior business intelligence consultant. "
+                    "Always return valid JSON only. "
+                    "Never use markdown."
+                ),
+            },
+            {
                 "role": "user",
-                "content": prompt
-            }
+                "content": prompt,
+            },
         ],
-        temperature=0.4,
-        max_tokens=2000
+        temperature=0.2,
+        response_format={"type": "json_object"},
     )
 
-    return completion.choices[0].message.content
+    return response.choices[0].message.content
