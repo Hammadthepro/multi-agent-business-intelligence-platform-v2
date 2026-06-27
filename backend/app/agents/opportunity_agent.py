@@ -12,6 +12,7 @@ class OpportunityAgent(BaseAgent):
 
     async def run(
         self,
+        request,
         market,
         competitors,
         leads,
@@ -19,6 +20,7 @@ class OpportunityAgent(BaseAgent):
     ):
 
         prompt = opportunity_prompt(
+            request.company_name,
             market,
             competitors,
             leads,

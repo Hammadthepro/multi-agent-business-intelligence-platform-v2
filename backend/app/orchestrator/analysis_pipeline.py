@@ -1,41 +1,58 @@
 import asyncio
 
-from app.research.context_builder import context_builder
-
 from app.agents.market_agent import MarketAgent
 from app.agents.competitor_agent import CompetitorAgent
 from app.agents.lead_agent import LeadAgent
 from app.agents.audit_agent import AuditAgent
+from app.agents.opportunity_agent import OpportunityAgent
+from app.agents.outreach_agent import OutreachAgent
+
+from app.utils.context_builder import ContextBuilder
 
 
 class AnalysisPipeline:
 
     def __init__(self):
-        self.market_agent = MarketAgent()
-        self.competitor_agent = CompetitorAgent()
-        self.lead_agent = LeadAgent()
-        self.audit_agent = AuditAgent()
+
+        self.market = MarketAgent()
+        self.competitor = CompetitorAgent()
+        self.lead = LeadAgent()
+        self.audit = AuditAgent()
+        self.opportunity = OpportunityAgent()
+        self.outreach = OutreachAgent()
 
     async def run(self, request):
 
-        # Build shared research context once
-        context = await context_builder.build(request)
+        context = ContextBuilder().build(request)
 
         market, competitors, leads, audit = await asyncio.gather(
-            self.market_agent.execute(request, context),
-            self.competitor_agent.execute(request, context),
-            self.lead_agent.execute(request, context),
-            self.audit_agent.execute(request, context),
+            self.market.run(request, context),
+            self.competitor.run(request, context),
+            self.lead.run(request, context),
+            self.audit.run(request, context),
+        )
+
+        opportunity = await self.opportunity.run(
+            request,
+            market,
+            competitors,
+            leads,
+            audit,
+        )
+
+        outreach = await self.outreach.run(
+            request,
+            opportunity,
         )
 
         return {
-            "context": {
-                "query": context["query"]
-            },
+            "context": context,
             "market": market,
             "competitors": competitors,
             "leads": leads,
             "audit": audit,
+            "opportunity": opportunity,
+            "outreach": outreach,
         }
 
 

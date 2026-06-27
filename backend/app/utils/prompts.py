@@ -169,70 +169,124 @@ Rules:
 
 
 def opportunity_prompt(
-    market,
-    competitors,
-    leads,
-    audit,
-):
+    company_name: str,
+    market: dict,
+    competitors: dict,
+    leads: dict,
+    audit: dict,
+) -> str:
+
     return f"""
 You are a senior Business Growth Consultant.
 
-Your task is to combine all previous agent outputs.
+Company:
+{company_name}
 
 Market Intelligence:
-
 {market}
 
 Competitor Analysis:
-
 {competitors}
 
 Lead Analysis:
-
 {leads}
 
 Website Audit:
-
 {audit}
+
+Your task is to combine ALL previous agent outputs into one strategic business plan.
 
 Return ONLY valid JSON.
 
 Return exactly:
 
 {{
-    "business_summary":"",
+    "business_summary": "",
 
-    "top_opportunities":[
+    "top_opportunities": [
         ""
     ],
 
-    "best_target_industries":[
+    "best_target_industries": [
         ""
     ],
 
-    "highest_value_services":[
-        ""
-    ],
-
-    "competitive_advantages":[
-        ""
-    ],
-
-    "highest_priority_leads":[
+    "highest_value_services": [
         {{
-            "company":"",
-            "reason":""
+            "service": "",
+            "reason": "",
+            "demand": "High | Medium | Low"
         }}
     ],
 
-    "estimated_project_value":"",
+    "competitive_advantages": [
+        ""
+    ],
 
-    "recommended_next_steps":[
+    "highest_priority_leads": [
+        {{
+            "company": "",
+            "reason": "",
+            "priority": "High | Medium | Low"
+        }}
+    ],
+
+    "estimated_project_value": "",
+
+    "recommended_next_steps": [
         ""
     ]
 }}
 
-No markdown.
+Rules:
 
+- Base recommendations only on the supplied analyses.
+- Prioritize leads with the highest revenue potential.
+- Recommend services with the strongest market demand.
+- Do not invent unsupported facts.
+- Return valid JSON only.
+- No markdown.
+"""
+
+
+def outreach_prompt(
+    company_name,
+    opportunity,
+):
+    return f"""
+You are an expert B2B Sales Consultant.
+
+Company:
+
+{company_name}
+
+Business Intelligence:
+
+{opportunity}
+
+Create personalized outreach.
+
+Return ONLY JSON.
+
+{{
+    "emails":[
+        {{
+            "company":"",
+            "subject":"",
+            "body":""
+        }}
+    ],
+
+    "linkedin_messages":[
+        {{
+            "company":"",
+            "message":""
+        }}
+    ],
+
+    "cold_call_script":""
+}}
+
+No markdown.
 JSON only.
 """
