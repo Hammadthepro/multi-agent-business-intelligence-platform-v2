@@ -1,6 +1,64 @@
-def market_prompt(company_name: str, industry: str, target_market: str, search_results: str) -> str:
+def format_knowledge(knowledge) -> str:
+    """
+    Formats either:
+    1. Shared intelligence dictionary (current pipeline)
+    2. Tavily search result list (backward compatible)
+    """
+
+    if not knowledge:
+        return "No research available."
+
+    # Current pipeline (shared summaries)
+    if isinstance(knowledge, dict):
+
+        text = ""
+
+        for category, summary in knowledge.items():
+            text += f"""
+==============================
+{category.upper()}
+==============================
+
+{summary}
+
+"""
+
+        return text
+
+    # Old Tavily format
+    if isinstance(knowledge, list):
+
+        text = ""
+
+        for item in knowledge:
+
+            text += f"""
+Title: {item.get("title","")}
+
+URL: {item.get("url","")}
+
+Snippet:
+{item.get("snippet","")}
+
+----------------------------------------
+
+"""
+
+        return text
+
+    # Fallback
+    return str(knowledge)
+    
+
+def market_prompt(
+    company_name: str,
+    industry: str,
+    target_market: str,
+    knowledge,
+) -> str:
+
     return f"""
-You are a senior market research analyst.
+You are a Senior Market Research Consultant.
 
 Company:
 {company_name}
@@ -11,34 +69,36 @@ Industry:
 Target Market:
 {target_market}
 
-Latest Web Research:
-{search_results}
+Research:
+{format_knowledge(knowledge)}
 
-Analyze this business and return ONLY valid JSON.
+Analyze ONLY the supplied research.
 
-Return this structure:
+Return ONLY valid JSON.
 
 {{
-    "market_size": "...",
-    "growth_rate": "...",
-    "trends": [],
-    "opportunities": [],
-    "risks": [],
-    "recommended_services": []
+    "market_size":"",
+    "growth_rate":"",
+    "trends":[],
+    "opportunities":[],
+    "risks":[],
+    "recommended_services":[]
 }}
 
-Do not include markdown.
-Do not include explanations outside the JSON.
+No markdown.
+JSON only.
 """
+
 
 def competitor_prompt(
     company_name: str,
     industry: str,
     target_market: str,
-    search_results: str,
+    knowledge,
 ) -> str:
+
     return f"""
-You are a senior competitive intelligence analyst.
+You are a Senior Competitive Intelligence Consultant.
 
 Company:
 {company_name}
@@ -49,30 +109,29 @@ Industry:
 Target Market:
 {target_market}
 
-Latest Web Research:
-{search_results}
+Research:
+{format_knowledge(knowledge)}
 
-Analyze the competitive landscape and return ONLY valid JSON.
+Analyze ONLY the supplied research.
 
-Return this structure:
+Return ONLY valid JSON.
 
 {{
-    "top_competitors": [
+    "top_competitors":[
         {{
-            "name": "",
-            "website": "",
-            "strengths": [],
-            "weaknesses": []
+            "name":"",
+            "website":"",
+            "strengths":[],
+            "weaknesses":[]
         }}
     ],
-    "market_gap": [],
-    "pricing_insights": [],
-    "recommendations": []
+    "market_gap":[],
+    "pricing_insights":[],
+    "recommendations":[]
 }}
 
-Do not include markdown.
-
-Return valid JSON only.
+No markdown.
+JSON only.
 """
 
 
@@ -80,10 +139,11 @@ def lead_prompt(
     company_name: str,
     industry: str,
     target_market: str,
-    search_results: str,
+    knowledge,
 ) -> str:
+
     return f"""
-You are a senior B2B sales intelligence consultant.
+You are a Senior B2B Sales Intelligence Consultant.
 
 Company:
 {company_name}
@@ -94,44 +154,103 @@ Industry:
 Target Market:
 {target_market}
 
-Latest Web Research:
-{search_results}
+Research:
+{format_knowledge(knowledge)}
 
-Identify high-quality business leads that are likely to need the company's services.
+Identify companies most likely to purchase the company's services.
 
 Return ONLY valid JSON.
 
-Structure:
-
 {{
-    "qualified_leads": [
+    "qualified_leads":[
         {{
-            "company": "",
-            "website": "",
-            "industry": "",
-            "estimated_size": "",
-            "why_good_fit": "",
-            "pain_points": [],
-            "recommended_service": "",
-            "priority": "High | Medium | Low"
+            "company":"",
+            "website":"",
+            "industry":"",
+            "estimated_size":"",
+            "why_good_fit":"",
+            "pain_points":[],
+            "recommended_service":"",
+            "priority":"High | Medium | Low"
         }}
     ]
 }}
 
 Rules:
 
-- Recommend only companies that realistically fit the target market.
-- Explain why each company is a good prospect.
-- Infer likely business pain points from public information.
-- Recommend the most relevant service.
-- Return between 5 and 10 qualified leads.
-- Do not include markdown.
-- Return valid JSON only.
+- Recommend 5–10 companies.
+- Explain why each company is a good fit.
+- Infer likely pain points.
+- Recommend the best matching service.
+
+No markdown.
+JSON only.
 """
 
-def audit_prompt(company_name: str, website: str, analysis: dict) -> str:
+
+def pricing_prompt(
+    company_name,
+    industry,
+    knowledge,
+):
+
     return f"""
-You are a senior Website Audit and CRO consultant.
+You are a Senior Pricing Intelligence Consultant.
+
+Company:
+{company_name}
+
+Industry:
+{industry}
+
+Research:
+{format_knowledge(knowledge)}
+
+Analyze competitor pricing.
+
+Return ONLY JSON.
+
+{{
+    "pricing_models":[
+        {{
+            "company":"",
+            "pricing_model":"",
+            "estimated_price":"",
+            "strengths":[],
+            "weaknesses":[]
+        }}
+    ],
+
+    "pricing_gaps":[
+        ""
+    ],
+
+    "recommended_pricing_strategy":"",
+
+    "premium_services":[
+        ""
+    ]
+}}
+
+Rules:
+
+- Estimate pricing when unavailable.
+- Explain reasoning.
+- Recommend the best pricing strategy.
+
+No markdown.
+JSON only.
+"""
+
+
+def audit_prompt(
+    company_name,
+    website,
+    analysis,
+):
+
+    return f"""
+You are a Senior Website Audit Consultant.
 
 Company:
 {company_name}
@@ -142,42 +261,38 @@ Website:
 Website Analysis:
 {analysis}
 
-Analyze the website data and return ONLY valid JSON.
-
-Return this structure:
+Return ONLY JSON.
 
 {{
-    "overall_score": 0,
-    "seo_score": 0,
-    "performance_score": 0,
-    "ux_score": 0,
-    "strengths": [],
-    "weaknesses": [],
-    "critical_issues": [],
-    "recommendations": [],
-    "recommended_services": []
+    "overall_score":0,
+    "seo_score":0,
+    "performance_score":0,
+    "ux_score":0,
+    "strengths":[],
+    "weaknesses":[],
+    "critical_issues":[],
+    "recommendations":[],
+    "recommended_services":[]
 }}
 
-Rules:
+Scores must be between 0 and 100.
 
-- overall_score between 0 and 100
-- Be objective.
-- Use only the provided analysis.
-- Return JSON only.
-- No markdown.
+No markdown.
+JSON only.
 """
 
 
 def opportunity_prompt(
-    company_name: str,
-    market: dict,
-    competitors: dict,
-    leads: dict,
-    audit: dict,
-) -> str:
+    company_name,
+    market,
+    competitors,
+    leads,
+    audit,
+    pricing,
+):
 
     return f"""
-You are a senior Business Growth Consultant.
+You are a Senior Business Growth Strategist.
 
 Company:
 {company_name}
@@ -194,58 +309,53 @@ Lead Analysis:
 Website Audit:
 {audit}
 
-Your task is to combine ALL previous agent outputs into one strategic business plan.
+Pricing Intelligence:
+{pricing}
 
-Return ONLY valid JSON.
+Combine everything into one executive strategy.
 
-Return exactly:
+Return ONLY JSON.
 
 {{
-    "business_summary": "",
+    "business_summary":"",
 
-    "top_opportunities": [
+    "top_opportunities":[
         ""
     ],
 
-    "best_target_industries": [
+    "best_target_industries":[
         ""
     ],
 
-    "highest_value_services": [
+    "highest_value_services":[
         {{
-            "service": "",
-            "reason": "",
-            "demand": "High | Medium | Low"
+            "service":"",
+            "reason":"",
+            "demand":"High | Medium | Low"
         }}
     ],
 
-    "competitive_advantages": [
+    "competitive_advantages":[
         ""
     ],
 
-    "highest_priority_leads": [
+    "highest_priority_leads":[
         {{
-            "company": "",
-            "reason": "",
-            "priority": "High | Medium | Low"
+            "company":"",
+            "reason":"",
+            "priority":"High | Medium | Low"
         }}
     ],
 
-    "estimated_project_value": "",
+    "estimated_project_value":"",
 
-    "recommended_next_steps": [
+    "recommended_next_steps":[
         ""
     ]
 }}
 
-Rules:
-
-- Base recommendations only on the supplied analyses.
-- Prioritize leads with the highest revenue potential.
-- Recommend services with the strongest market demand.
-- Do not invent unsupported facts.
-- Return valid JSON only.
-- No markdown.
+No markdown.
+JSON only.
 """
 
 
@@ -253,18 +363,17 @@ def outreach_prompt(
     company_name,
     opportunity,
 ):
+
     return f"""
-You are an expert B2B Sales Consultant.
+You are a Senior B2B Sales Consultant.
 
 Company:
-
 {company_name}
 
 Business Intelligence:
-
 {opportunity}
 
-Create personalized outreach.
+Generate personalized outreach.
 
 Return ONLY JSON.
 
@@ -286,6 +395,85 @@ Return ONLY JSON.
 
     "cold_call_script":""
 }}
+
+No markdown.
+JSON only.
+"""
+
+
+def search_planner_prompt(
+    company_name,
+    industry,
+    target_market,
+):
+
+    return f"""
+You are a Senior Business Intelligence Search Planner.
+
+Company:
+{company_name}
+
+Industry:
+{industry}
+
+Target Market:
+{target_market}
+
+Create ONLY the highest-value search queries.
+
+Return ONLY JSON.
+
+{{
+    "market": [],
+    "competitors": [],
+    "pricing": [],
+    "technology": [],
+    "seo": [],
+    "social": [],
+    "leads": []
+}}
+
+Rules:
+
+- 1 query for market
+- 2 queries for competitors
+- 1 query for pricing
+- 1 query for technology
+- 1 query for seo
+- 1 query for social
+- 1 query for leads
+
+Every query should be highly specific and optimized for Tavily.
+
+JSON only.
+"""
+
+
+def research_summary_prompt(category, knowledge):
+
+    return f"""
+You are a Senior Business Intelligence Research Summarizer.
+
+Category:
+{category}
+
+Research:
+{knowledge}
+
+Summarize ONLY the supplied research.
+
+Return ONLY JSON.
+
+{{
+    "summary":""
+}}
+
+Rules:
+
+- Maximum 300 words.
+- Remove duplicates.
+- Keep only important facts.
+- Do not invent information.
 
 No markdown.
 JSON only.

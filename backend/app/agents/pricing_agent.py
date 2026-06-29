@@ -2,24 +2,23 @@ import json
 
 from app.agents.base_agent import BaseAgent
 from app.services.groq_service import ask_groq
-from app.utils.prompts import competitor_prompt
+from app.utils.prompts import pricing_prompt
 
 
-class CompetitorAgent(BaseAgent):
+class PricingAgent(BaseAgent):
 
     def __init__(self):
-        super().__init__("Competitor Agent")
+        super().__init__("Pricing Agent")
 
     async def run(self, request, memory):
 
         research = memory.get("shared_intelligence")
 
-        search_results = research["competitors"]
+        search_results = research["pricing"]
 
-        prompt = competitor_prompt(
+        prompt = pricing_prompt(
             request.company_name,
             request.industry,
-            request.target_market,
             search_results,
         )
 
@@ -27,6 +26,6 @@ class CompetitorAgent(BaseAgent):
 
         result = json.loads(response)
 
-        memory.set("competitors", result)
+        memory.set("pricing", result)
 
         return result

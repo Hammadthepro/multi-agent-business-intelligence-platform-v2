@@ -29,20 +29,23 @@ def search_web(query: str, max_results: int = 5):
 
 def format_search_results(results):
     """
-    Convert Tavily search results into a readable text block
-    for the LLM prompt.
+    Convert Tavily results into a compact format.
+
+    Keep token usage LOW.
     """
 
     formatted = []
 
     for item in results:
+
+        snippet = item.get("content", "")[:300]
+
         formatted.append(
-            f"""
-Title: {item.get('title', '')}
-URL: {item.get('url', '')}
-Content:
-{item.get('content', '')}
-"""
+            {
+                "title": item.get("title", ""),
+                "url": item.get("url", ""),
+                "snippet": snippet,
+            }
         )
 
-    return "\n\n".join(formatted)
+    return formatted

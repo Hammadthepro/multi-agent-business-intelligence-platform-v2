@@ -11,7 +11,7 @@ class AuditAgent(BaseAgent):
     def __init__(self):
         super().__init__("Audit Agent")
 
-    async def run(self, request, context):
+    async def run(self, request, memory):
 
         analysis = website_analyzer.analyze(request.website)
 

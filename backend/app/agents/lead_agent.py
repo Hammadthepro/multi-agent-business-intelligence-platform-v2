@@ -10,15 +10,28 @@ class LeadAgent(BaseAgent):
     def __init__(self):
         super().__init__("Lead Agent")
 
-    async def run(self, request, context):
+    async def run(self, request, memory):
+
+        research = memory.get("shared_intelligence")
+
+        search_results = {
+            "market": research["market"],
+            "competitors": research["competitors"],
+            "social": research["social"],
+            "technology": research["technology"],
+        }
 
         prompt = lead_prompt(
             request.company_name,
             request.industry,
             request.target_market,
-            context["context"],
+            search_results,
         )
 
         response = ask_groq(prompt)
 
-        return json.loads(response)
+        result = json.loads(response)
+
+        memory.set("leads", result)
+
+        return result

@@ -17,6 +17,7 @@ class OpportunityAgent(BaseAgent):
         competitors,
         leads,
         audit,
+        pricing,
     ):
 
         prompt = opportunity_prompt(
@@ -25,6 +26,7 @@ class OpportunityAgent(BaseAgent):
             competitors,
             leads,
             audit,
+            pricing,
         )
 
         response = ask_groq(prompt)
